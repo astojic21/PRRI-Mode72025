@@ -4,6 +4,6 @@ A Mode 7 based Shot 'em up airbattle game developed by students and the [Artific
 
 # Credits
 
-This game is based on [Stanislav Petrov's implementation](https://github.com/StanislavPetrovV/DOOM-style-Game) licensed under the MIT license.
+This game is based on [Stanislav Petrov's implementation](https://github.com/StanislavPetrovV/Mode7) licensed under the MIT license.
 
 Some of the used graphics have been generated using AI (DALL-E).
