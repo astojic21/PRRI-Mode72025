@@ -3,7 +3,6 @@ import numpy as np
 from settings import *
 from numba import njit, prange
 
-
 class Mode7:
     def __init__(self, app):
         self.app = app
