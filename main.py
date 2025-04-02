@@ -2,7 +2,7 @@ import pygame as pg
 import sys
 from settings import WIN_RES, MENU, GAME # *Osim WIN_RES importam i stateove MENU i GAME
 from mode7 import *
-from enemies import Game
+from game import Game
 from menu import Menu # *Import menu klase
 
 class App:
