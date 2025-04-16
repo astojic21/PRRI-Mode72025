@@ -6,7 +6,7 @@ from numba import njit, prange
 class Mode7:
     def __init__(self, app):
         self.app = app
-        self.floor_tex = pg.image.load('textures/floor_3.png').convert()
+        self.floor_tex = pg.image.load('textures/ground_town_lowres.png').convert()
         self.tex_size = self.floor_tex.get_size()
         self.floor_array = pg.surfarray.array3d(self.floor_tex)
 
