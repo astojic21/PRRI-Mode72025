@@ -107,6 +107,7 @@ class Mode7:
         dx, dy = 0, 0
         speed_sin = SPEED * sin_a
         speed_cos = SPEED * cos_a
+        self.angle %= 2 * np.pi
 
         keys = pg.key.get_pressed()
         if keys[pg.K_w]:

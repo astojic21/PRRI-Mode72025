@@ -23,10 +23,11 @@ class Projectile:
             pg.draw.circle(screen, (255, 0, 0), (int(screen_x), int(screen_y)), radius)
 
 class Enemy:
-    def __init__(self, pos, speed=0.02):
+    def __init__(self, pos, speed=0.02, min_distance=2.0):
         self.pos = np.array(pos, dtype=np.float32)
         self.speed = speed
         self.alive = True
+        self.min_distance = min_distance
         self.texture = pg.image.load('textures/airship_1.png').convert_alpha()
         self.bullets = []
         self.hit_timer = 0
@@ -37,10 +38,13 @@ class Enemy:
     def update(self, player_pos):
         direction = player_pos - self.pos
         distance = np.linalg.norm(direction)
-        if distance > 0:
-            self.pos += (direction / distance) * self.speed
-        if self.hit_timer > 0:
-            self.hit_timer -= 1
+
+        if distance < self.min_distance:
+            direction /= distance
+            self.pos -= direction * self.speed
+        else:
+            direction /= distance
+            self.pos += direction * self.speed
 
         self.shoot_timer -= 1
         if self.shoot_timer <= 0:
