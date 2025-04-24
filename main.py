@@ -6,6 +6,7 @@ from game import Game
 from menu import Menu
 from weapons import *
 from player import Player
+from results import ResultsScreen
 
 class App:
     def __init__(self):
@@ -19,18 +20,55 @@ class App:
         self.menu = Menu(self)
         self.state = MENU
         self.weapon = REVOLVER
+        self.weapon_icons = {
+            REVOLVER: pg.image.load("textures/revolver_steampunk.png").convert_alpha(),
+            SHOTGUN: pg.image.load("textures/shotgun_steampunk.png").convert_alpha(),
+            MINIGUN: pg.image.load("textures/minigun_steampunk.png").convert_alpha(),
+        }
+        for key in self.weapon_icons:
+            self.weapon_icons[key] = pg.transform.scale(self.weapon_icons[key], (80, 80))
+        self.weapon_frame = pg.image.load("textures/UI_frame_static.png").convert_alpha()
+        self.weapon_frame = pg.transform.scale(self.weapon_frame, (300, 100))
         self.shooting = False
         self.shotgun_sound = pg.mixer.Sound("music/shotgun sound effect.mp3")
         pg.mixer.music.load("music/Pixel Pulse.mp3")
         pg.mixer.music.set_volume(0.5)
         pg.mixer.music.play(-1, 0.0)
-        print("Initialized in MENU state.")
+
+    def game_over_screen(self):
+        time_survived = 300
+        enemies_killed = 50
+        waves_survived = 5
+
+        results_screen = ResultsScreen(self.screen, time_survived, enemies_killed, waves_survived)
+        
+        while not results_screen.is_done():
+            results_screen.update()
+            results_screen.draw()
+            pg.time.Clock().tick(60)
+        self.wait_for_input_after_game_over()
+
+    def wait_for_input_after_game_over(self):
+        waiting_for_input = True
+        while waiting_for_input:
+            for event in pg.event.get():
+                if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
+                    pg.quit()
+                    sys.exit()
+                elif event.type == pg.KEYDOWN and event.key == pg.K_r:
+                    self.__init__()
+                    self.state = GAME
+                    waiting_for_input = False
+                elif event.type == pg.KEYDOWN and event.key == pg.K_RETURN:
+                    self.state = MENU
+                    waiting_for_input = False
 
     def update(self):
         if self.state == MENU:
             self.menu.update()
         elif self.state == GAME:
             if self.player.is_dead():
+                self.game_over_screen()
                 return
             player_pos = self.mode7.pos
             self.mode7.update()
@@ -51,7 +89,24 @@ class App:
         self.screen.blit(enemy_text, (10, 40))
 
         self.player.draw_health(self.screen)
-        print("PLAYER HP =", self.player.health)
+
+    def draw_weapon_ui(self):
+        padding = 20
+        frame_width, frame_height = self.weapon_frame.get_size()
+        x = padding
+        y = self.screen.get_height() - frame_height - padding
+        if x + frame_width > self.screen.get_width():
+            x = self.screen.get_width() - frame_width
+        if y + frame_height > self.screen.get_height():
+            y = self.screen.get_height() - frame_height
+        frame_rect = self.weapon_frame.get_rect()
+        frame_rect.topleft = (x, y)
+        self.screen.blit(self.weapon_frame, frame_rect)
+        icon = self.weapon_icons[self.weapon]
+        icon = pg.transform.scale(icon, (64, 64))
+        icon_x = frame_rect.x + (frame_rect.width - icon.get_width()) // 2
+        icon_y = frame_rect.y + (frame_rect.height - icon.get_height()) // 2
+        self.screen.blit(icon, (icon_x, icon_y))
 
     def draw(self):
         if self.state == MENU:
@@ -60,6 +115,7 @@ class App:
             self.mode7.draw()
             self.game.draw(self.screen)
             self.draw_ui()
+            self.draw_weapon_ui()
             pg.display.flip()
 
     def check_event(self):
@@ -70,9 +126,8 @@ class App:
             if self.state == MENU and event.type == pg.KEYDOWN and event.key == pg.K_RETURN:
                 self.state = GAME
                 self.switch_to_game()
-                print("Starting GAME state.")
             elif self.state == GAME and self.player.is_dead() and event.type == pg.KEYDOWN and event.key == pg.K_r:
-                self.__init__()  # restartaj sve
+                self.__init__()
             elif event.type == pg.KEYDOWN and event.key == pg.K_j:
                 self.weapon = REVOLVER
             elif event.type == pg.KEYDOWN and event.key == pg.K_k:

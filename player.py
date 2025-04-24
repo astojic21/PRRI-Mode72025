@@ -5,35 +5,36 @@ class Player:
     def __init__(self):
         self.health = 6
         self.max_health = 6
+        self.hit_sound = pg.mixer.Sound('music/HP loss.mp3')
+        self.health_bar_sprite = pg.image.load('textures/Steampunk_healthbar_anim.png').convert_alpha()
+        self.frame_width = 64
+        self.frame_height = 64
+        self.scaled_width = int(self.frame_width * 3)
+        self.scaled_height = int(self.frame_height * 3)
+        self.total_frames = 7
+        self.health_bar_frames = []
+        for i in range(self.total_frames):
+            x = i * self.frame_width
+            y = 0
+            frame = self.health_bar_sprite.subsurface(pg.Rect(x, y, self.frame_width, self.frame_height))
+            scaled_frame = pg.transform.scale(frame, (self.scaled_width, self.scaled_height))
+            self.health_bar_frames.append(scaled_frame)
 
     def take_damage(self, amount):
         print(f"[DMG] Taking {amount} damage")
         self.health = max(0, self.health - amount)
+        self.hit_sound.play()
 
     def is_dead(self):
         return self.health <= 0
 
     def draw_health(self, screen):
-        bar_width = 150
-        bar_height = 20
-        x = screen.get_width() - bar_width - 10
-        y = screen.get_height() - bar_height - 10
-
-        bg_rect = pg.Rect(x, y, bar_width, bar_height)
-        pg.draw.rect(screen, (50, 50, 50), bg_rect)
-
-        health_ratio = self.health / self.max_health
-        fg_rect = pg.Rect(x, y, int(bar_width * health_ratio), bar_height)
-        pg.draw.rect(screen, (0, 255, 0), fg_rect)
-
-        pg.draw.rect(screen, (255, 255, 255), bg_rect, 2)
-
-        if self.is_dead():
-            font = pg.font.SysFont("Arial", 48, bold=True)
-            text_surface = font.render("GAME OVER", True, (255, 0, 0))
-            screen.blit(text_surface, (
-                screen.get_width() // 2 - text_surface.get_width() // 2,
-                screen.get_height() // 2 - text_surface.get_height() // 2))
-
+        health_index = self.max_health - self.health
+        if health_index >= 6 or health_index <= 0:
+            health_index = 0
+        x = screen.get_width() - self.scaled_width - 10
+        y = 10
+        screen.blit(self.health_bar_frames[health_index], (x, y))
+        
     def update(self):
         pass
