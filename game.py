@@ -1,6 +1,7 @@
 import pygame as pg
 import numpy as np
 import random
+from drops import HealthDrop, ShotgunDrop, MinigunDrop
 from enemies import Enemy
 
 class Projectile:
@@ -20,6 +21,7 @@ class Projectile:
         self.max_distance = max_distance
         self.start_pos = np.array(self.pos, dtype=np.float32)
         self.active = True
+        #self.app = app
 
     def update(self):
         self.pos += self.direction * self.speed
@@ -33,19 +35,26 @@ class Projectile:
             pg.draw.circle(screen, (0, 0, 0), (int(screen_x), int(screen_y)), radius)
 
 class Game:
-    def __init__(self, mode7, player):
+    def __init__(self, mode7, player, app):
         self.mode7 = mode7
         self.player = player
+        self.app = app
         self.projectiles = []
         self.enemies = []
+        self.drops = []
         self.wave = 1
         self.spawn_wave(self.wave)
+
 
     def spawn_wave(self, wave_num):
         self.enemies.clear()
         for _ in range(5 + wave_num * 2):
             x, y = random.uniform(-10, 10), random.uniform(-10, 10)
             self.enemies.append(Enemy((x, y)))
+        if wave_num == 5:
+            self.mode7.set_textures('textures/sky_cloudyday_lowres.png', 'textures/ground_sand_lowres.png')
+        elif wave_num == 10:
+            self.mode7.set_textures('textures/polluted_sky_lowres.png', 'textures/groubd_volcan_lowres.png')
 
     def update(self, player_pos):
         for proj in self.projectiles:
@@ -55,6 +64,15 @@ class Game:
             for enemy in self.enemies:
                 if enemy.check_collision(proj):
                     proj.active = False
+                    if not enemy.alive:
+                        self.app.enemies_killed += 1
+                        if random.random() < 0.3:
+                            drop_type = random.choice([HealthDrop, ShotgunDrop, MinigunDrop])
+                            pos = enemy.pos.copy()
+                            if drop_type == HealthDrop:
+                                self.drops.append(HealthDrop(pos, self.player))
+                            else:
+                                self.drops.append(drop_type(pos, self.app))
 
         self.projectiles = [p for p in self.projectiles if p.active]
 
@@ -67,6 +85,11 @@ class Game:
 
         self.enemies = [e for e in self.enemies if e.alive]
 
+        for drop in self.drops:
+            drop.update(player_pos)
+
+        self.drops = [d for d in self.drops if not d.collected]
+
         if len(self.enemies) == 0:
             self.wave += 1
             self.spawn_wave(self.wave)
@@ -76,6 +99,9 @@ class Game:
             proj.draw(screen, self.mode7)
         for enemy in self.enemies:
             enemy.draw(screen, self.mode7)
+        for drop in self.drops:
+            drop.draw(screen, self.mode7)
+
 
     def shoot_revolver(self, pos, angle):
         self.projectiles.append(Projectile(pos, angle, speed=0.6))
@@ -85,4 +111,4 @@ class Game:
             self.projectiles.append(Projectile(pos, angle + spread, speed=0.5))
 
     def shoot_minigun(self, pos, angle):
-        self.projectiles.append(Projectile(pos, angle, speed=0.8))
+        self.projectiles.append(Projectile(pos, angle, speed=0.5))
